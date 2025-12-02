@@ -1,238 +1,198 @@
-🎲 Secure Spring Monopoly — Backend Game Engine
+# 🎲 Secure Spring Monopoly
 
-A fully online, turn-based Monopoly game built with Java 17, Spring Boot 3, and an in-memory game engine.
-Players can create rooms, join sessions, roll dice, buy properties, pay rent, and view the game state — all through REST APIs.
+A secure, turn-based **online Monopoly backend** built using **Java 17** and **Spring Boot 3**.  
+Players can create rooms, join sessions, roll dice, buy properties, pay rent, and track game state — all via REST APIs.
 
-The engine mimics the core flow of your original Python FastAPI project, rewritten cleanly in Java with Spring Boot.
+This project is a **Java/Spring rewrite** of the original Python FastAPI CLI version, updated with session-based authentication and a clean in-memory game engine.
 
-🚀 Features
-🧑‍🤝‍🧑 Multiplayer Rooms
+---
 
-Any user can create a room
+## 📌 Table of Contents
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Setup](#-setup)
+- [Environment](#-environment)
+- [Running the Application](#-running-the-application)
+- [API Overview](#-api-overview)
+  - [Auth Endpoints](#auth-endpoints)
+  - [Room Endpoints](#room-endpoints)
+  - [Game Endpoints](#game-endpoints)
+  - [Polling Endpoints](#polling-endpoints)
+- [Game Engine](#-game-engine)
+- [H2 Database](#-h2-database)
+- [Future Enhancements](#-future-enhancements)
+- [License](#-license)
 
-Other players can join using the room ID
+---
 
-🎲 Turn-Based Engine
+# ⭐ Features
 
-Dice rolls
+### 🔐 Secure Authentication
+- Register, login, session tracking  
+- Session cookie–based security (simple + safe for multiplayer)
 
-Movement around the board
+### 🧑‍🤝‍🧑 Multiplayer Support
+- Create a room  
+- Join existing rooms  
+- Each room maintains its own game state
 
-Property ownership
+### 🎲 Full Turn-Based Gameplay
+- Dice rolling  
+- Movement  
+- Property buying  
+- Rent logic  
+- Balance updates  
+- Bankruptcy placeholder
 
-Rent payments
+### 🧩 In-Memory Monopoly Engine
+- Fast, lightweight, no DB needed  
+- Each room has its own `MonopolyEngine` instance  
+- Easy to extend (Chance, Jail, Houses, etc.)
 
-Automatic bankruptcy detection
+### 📝 Persistent Logging
+Every action is recorded:
+- Rolls  
+- Property purchases  
+- Rent payments  
+- Movements  
+- Player interactions  
 
-🧩 Game State Engine (In-Memory)
+Logs are returned in `/poll/state`.
 
-Powered by:
+### 🗄 H2 In-Memory Database
+- Zero setup  
+- Auto-wipes on restart  
+- Great for local development
+
+---
+
+# 🛠 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Language | Java 17 |
+| Framework | Spring Boot 3.4.x |
+| Security | Spring Security (Session Auth) |
+| Persistence | Spring Data JPA |
+| Database | H2 In-Memory |
+| Build | Maven |
+| Architecture | MVC + Service Layer + In-Memory Engine |
+
+---
+
+# 📁 Project Structure
+
+src/main/java/com/monopoly/secure_spring_monopoly/
+│
+├── controller/ # REST controllers
+├── service/ # Business logic layer
+├── repository/ # JPA repositories
+├── entity/ # JPA entities
+└── game/ # Monopoly engine (in memory)
+
+
+---
+
+# ⚙ Setup
+
+### Prerequisites
+Install Java 17 (Temurin recommended):
+
+```sh
+brew install --cask temurin@17
+🌱 Environment
+
+Your application.yml config should include:
+spring:
+  datasource:
+    url: jdbc:h2:mem:monopolydb
+    driver-class-name: org.h2.Driver
+    username: sa
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2
+
+server:
+  port: 8080
+🧠 Game Engine
+
+Core logic stored in game/:
 
 game/
   ├── MonopolyEngine.java
   ├── GamePlayer.java
   ├── GameTile.java
-  └── GameLogger.java
+  ├── GameLogger.java
+  ├── Dice.java
+  └── Board.java
 
+Features:
 
-Each room gets its own MonopolyEngine instance held in memory for fast gameplay.
+Full game state management
 
-📝 Action Logging
+Turns & sequencing
 
-Every action (roll, movement, property bought, rent paid) is written into a DB log table and returned via /poll/state.
+Property buying
 
-🗄 In-Memory H2 Database
+Rent calculation
 
-No setup needed.
-Tables auto-created from JPA entities.
+Movement
 
-📦 Tech Stack
+Logging
 
-Java 17
+Extensible:
 
-Spring Boot 3.4.12
+Chance/Community Chest
 
-Spring Web
+Jail mechanics
 
-Spring Data JPA
+Houses/Hotels
 
-Spring Security (session-based)
+Trading
 
-H2 in-memory database
+Auctions
 
-Maven
+# 🔒 Security Features (CWE-Based)
 
-⚙️ Setup & Running Locally
-1️⃣ Install Java 17 (Temurin)
+This project implements multiple safeguards aligned with common **CWE (Common Weakness Enumeration)** recommendations.
 
-On macOS:
+### ✔ JWT Tokens (CWE-384: Session Fixation & CWE-613: Session Management)
+- Supports secure JWT authentication option  
+- Tokens are short-lived and signed  
+- Prevents session hijacking and tampering  
 
-brew install --cask temurin@17
+### ✔ Input Validation (CWE-20: Improper Input Validation)
+- All user inputs validated at controller and service layers  
+- Sanitization for unsafe strings  
+- Rejects malformed JSON / invalid object states  
 
-2️⃣ Clone the repo
-git clone https://github.com/safiawajeed/secure-spring-monopoly.git
-cd secure-spring-monopoly
+### ✔ HTTPS + TLS Certificates (CWE-296: Improper Certificate Validation)
+- Supports HTTPS mode  
+- Includes key + certificate support in Spring Boot config  
+- Mitigates MITM and eavesdropping  
 
-3️⃣ Run the game
-mvn spring-boot:run
+### ✔ XSS Prevention (CWE-79)
+- No HTML rendering  
+- JSON-only API responses  
+- Sanitized inputs and headers  
+- Spring Security default XSS hardening  
 
-4️⃣ Open H2 console
+### ✔ Secure Password Storage (CWE-256: Plaintext Storage)
+- BCrypt hashing  
+- Never stored or logged in plaintext  
 
-http://localhost:8080/h2
+### ✔ Security Headers (CWE-614 / CWE-346 / CWE-602)
+- Session cookie set to `HttpOnly`  
+- CORS hardening  
+- Frame, content-type, caching headers  
 
-Use:
-
-JDBC URL: jdbc:h2:mem:monopolydb
-User: sa
-Password: (empty)
-
-🛠 API Endpoints
-Authentication
-Register
-POST /auth/register
-{
-  "username": "ali",
-  "email": "ali@example.com",
-  "password": "pass"
-}
-
-Login
-POST /auth/login
-{
-  "email": "ali@example.com",
-  "password": "pass"
-}
-
-Who Am I
-GET /auth/whoami
-
-🏠 Rooms
-Create Room
-POST /room/create
-
-Join Room
-POST /room/join/{roomId}
-
-Get Players
-GET /room/players/{roomId}
-
-🎮 Game Actions
-Roll Dice
-POST /game/roll/{roomId}
-
-Buy Property
-POST /game/buy/{roomId}
-
-End Turn
-POST /game/end/{roomId}
-
-🔄 Polling
-Get Game State
-GET /poll/state/{roomId}
-
-
-Returns:
-
-players
-
-positions
-
-balances
-
-logs
-
-actions
-
-properties owned
-
-🕹 How The Engine Works
-MonopolyEngine.java
-
-Holds all room-specific game state:
-
-players
-
-tiles
-
-property ownership
-
-turn index
-
-bankruptcy state
-
-Game Flow
-
-Player logs in
-
-Creates a room or joins one
-
-Rolls dice
-
-Lands on a tile
-
-Tile logic executes:
-
-unowned → eligible to buy
-
-owned → must pay rent
-
-special (e.g., tax, jail) → custom action
-
-Player may buy the tile
-
-Player ends turn
-
-Next player's turn starts
-
-All events get logged into the DB table and can be seen via polling endpoint.
-
-📁 Project Structure
-src/main/java/com/monopoly/secure_spring_monopoly/
-│
-├── entity/                 ← JPA models
-├── repository/             ← DB access
-├── service/                ← Game + business logic
-├── controller/             ← REST endpoints
-└── game/                   ← Monopoly engine (in-memory)
-
-🔒 Security
-
-Session-based authentication (HttpSession) is used:
-
-/auth/login sets a session cookie
-
-All game actions require the player to be logged in
-
-No JWT complexity needed for multiplayer game rooms
-
-🧪 Testing
-
-You can test API calls using:
-
-Postman
-
-Thunder Client (VSCode)
-
-Curl
-
-Browser REST extensions
-
-📌 Notes
-
-H2 resets every restart (perfect for dev)
-
-For production, you’d switch to MySQL/Postgres
-
-Game engine easily supports expansion:
-
-chance/community chest
-
-jail
-
-house/hotel upgrades
-
-auctions
-
-📜 License
-
-MIT License — do whatever you want with it 😄
+### ✔ Authentication Required for Game Actions (CWE-306: Missing Authentication)
+All endpoints under:
